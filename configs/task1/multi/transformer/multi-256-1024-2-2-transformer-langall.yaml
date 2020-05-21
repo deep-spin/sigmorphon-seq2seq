@@ -1,0 +1,102 @@
+name: "multi-256-1024-2-2-transformer-langall"
+
+data:
+    format: "sigmorphon-g2p"
+    train: "/home/bpop/sigmorphon-2020/2020/task1/data/train/*_train.tsv"
+    dev: "/home/bpop/sigmorphon-2020/2020/task1/data/dev/*_dev.tsv"
+    test: "/home/bpop/sigmorphon-2020/2020/task1/data/test/*_test.tsv"
+    src_level: "char"
+    trg_level: "word"
+    lowercase: False
+    max_sent_length: 50
+    src_voc_min_freq: 1
+    trg_voc_min_freq: 1
+    multilingual: True
+
+testing:
+    beam_size: 5
+    alpha: 1.0
+
+training:
+    random_seed: 42
+    optimizer: "adam"
+    adam_betas: [0.9, 0.98]
+    learning_rate: 0.01
+    learning_rate_min: 0.0001
+    learning_rate_factor: 1.0
+    learning_rate_warmup: 4000
+    clip_grad_norm: 1.0
+    weight_decay: 0.
+    batch_size: 1600
+    batch_type: "token"
+    eval_batch_size: 1600
+    eval_batch_type: "token"
+    batch_multiplier: 1
+    scheduling: "noam"
+    patience: 3
+    decrease_factor: 0.5
+    epochs: 100
+    validation_freq: 2000
+    logging_freq: 50
+    eval_metric: ["cer", "wer"]
+    early_stopping_metric: "cer"
+    model_dir: "models/task1/multi/transformer/multi-256-1024-2-2-langall"
+    overwrite: False
+    shuffle: True
+    use_cuda: True
+    max_output_length: 31
+    print_valid_sents: [0, 1, 2]
+    keep_last_ckpts: 3
+    loss: sparsemax
+
+model:
+    initializer: "xavier"
+    init_weight: 0.01
+    init_gain: 1.0
+    bias_initializer: "xavier"
+    embed_initializer: "xavier"
+    init_rnn_orthogonal: False
+    lstm_forget_gate: 1.
+    tied_embeddings: False
+    tied_softmax: False
+    encoder:
+        type: "transformer"
+        num_layers: 4
+        num_heads: 4
+        embeddings:
+            dropout: 0.3
+        multispace_embeddings:
+            src:
+                embedding_dim: 236
+                scale: True
+                freeze: False
+            language:
+                embedding_dim: 20
+                scale: True
+                freeze: False
+        hidden_size: 256
+        ff_size: 1024
+        dropout: 0.3
+        freeze: False
+    decoder:
+        type: "transformer"
+        num_layers: 4
+        num_heads: 4
+        embeddings:
+            dropout: 0.3
+        multispace_embeddings:
+            trg:
+                embedding_dim: 236
+                scale: True
+                freeze: False
+            language:
+                embedding_dim: 20
+                scale: True
+        hidden_size: 256
+        ff_size: 1024
+        dropout: 0.3
+        hidden_dropout: 0.3
+        freeze: False
+        gen_func: sparsemax
+        self_attn_func: sparsemax
+        src_attn_func: sparsemax

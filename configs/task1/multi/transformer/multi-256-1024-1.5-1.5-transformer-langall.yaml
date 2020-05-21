@@ -1,0 +1,109 @@
+name: "multi-256-1024-1.5-1.5-transformer-langall"
+
+# This configuration serves the purpose of documenting and explaining the settings, *NOT* as an example for good hyperparamter settings.
+
+data: # specify your data here
+    format: "sigmorphon-g2p"
+    train: "/home/bpop/sigmorphon-2020/2020/task1/data/train/*_train.tsv"
+    dev: "/home/bpop/sigmorphon-2020/2020/task1/data/dev/*_dev.tsv"
+    test: "/home/bpop/sigmorphon-2020/2020/task1/data/test/*_test.tsv"
+    src_level: "char"
+    trg_level: "word"
+    lowercase: False                 # lowercase the data, also for validation
+    max_sent_length: 50             # filter out longer sentences from training (src+trg)
+    src_voc_min_freq: 1             # src minimum frequency for a token to become part of the vocabulary
+    trg_voc_min_freq: 1             # trg minimum frequency for a token to become part of the vocabulary
+    multilingual: True
+
+testing:                            # specify which inference algorithm to use for testing (for validation it's always greedy decoding)
+    beam_size: 5                    # size of the beam for beam search
+    alpha: 1.0                      # length penalty for beam search
+
+training:                           # specify training details here
+    #load_model: "my_model/50.ckpt" # if given, load a pre-trained model from this checkpoint
+    random_seed: 42                 # set this seed to make training deterministic
+    optimizer: "adam"               # choices: "sgd", "adam", "adadelta", "adagrad", "rmsprop", default is SGD
+    adam_betas: [0.9, 0.98]        # beta parameters for Adam. These are the defaults. Typically these are different for Transformer models.
+    learning_rate: 0.01            # initial learning rate, default: 3.0e-4
+    learning_rate_min: 0.0001       # stop learning when learning rate is reduced below this threshold, default: 1.0e-8
+    learning_rate_factor: 1.0       # factor for Noam scheduler (used with Transformer)
+    learning_rate_warmup: 4000      # warmup steps for Noam scheduler (used with Transformer)
+    # clip_grad_val: 1.0              # clip the gradients to this value when they exceed it, optional
+    clip_grad_norm: 1.0            # norm clipping instead of value clipping
+    weight_decay: 0.                # l2 regularization, default: 0
+    batch_size: 1600                  # mini-batch size as number of sentences (when batch_type is "sentence"; default) or total number of tokens (when batch_type is "token")
+    batch_type: "token"          # create batches with sentences ("sentence", default) or tokens ("token")
+    eval_batch_size: 1600
+    eval_batch_type: "token"     # evaluation batch type ("sentence", default) or tokens ("token")
+    batch_multiplier: 1
+    scheduling: "noam"           # options: "plateau", "exponential", "decaying", "noam" (for Transformer)
+    patience: 3                     # specific to plateau scheduler: wait for this many validations without improvement before decreasing the learning rate
+    decrease_factor: 0.5            # specific to plateau & exponential scheduler: decrease the learning rate by this factor
+    epochs: 100                       # train for this many epochs
+    validation_freq: 2000             # validate after this many updates (number of mini-batches), default: 1000
+    logging_freq: 50                # log the training progress after this many updates, default: 100
+    eval_metric: ["cer", "wer"]
+    early_stopping_metric: "cer"
+    model_dir: "models/task1/multi/transformer/multi-256-1024-1.5-1.5-langall" # directory where models and validation results are stored, required
+    overwrite: False                 # overwrite existing model directory, default: False. Do not set to True unless for debugging!
+    shuffle: True                   # shuffle the training data, default: True
+    use_cuda: True                 # use CUDA for acceleration on GPU, required. Set to False when working on CPU.
+    max_output_length: 31           # maximum output length for decoding, default: None. If set to None, allow sentences of max 1.5*src length
+    print_valid_sents: [0, 1, 2]    # print this many validation sentences during each validation run, default: [0, 1, 2]
+    keep_last_ckpts: 1              # keep this many of the latest checkpoints, if -1: all of them, default: 5
+    loss: entmax15
+
+model:                              # specify your model architecture here
+    initializer: "xavier"           # initializer for all trainable weights (xavier, zeros, normal, uniform)
+    init_weight: 0.01               # weight to initialize; for uniform, will use [-weight, weight]
+    init_gain: 1.0                  # gain for Xavier initializer (default: 1.0)
+    bias_initializer: "xavier"       # initializer for bias terms (xavier, zeros, normal, uniform)
+    embed_initializer: "xavier"     # initializer for embeddings (xavier, zeros, normal, uniform)
+    #embed_init_weight: 0.1          # weight to initialize; for uniform, will use [-weight, weight]
+    #embed_init_gain: 1.0            # gain for Xavier initializer for embeddings (default: 1.0)
+    init_rnn_orthogonal: False      # use orthogonal initialization for recurrent weights (default: False)
+    lstm_forget_gate: 1.            # initialize LSTM forget gate with this value (default: 1.)
+    tied_embeddings: False          # tie src and trg embeddings, only applicable if vocabularies are the same, default: False
+    tied_softmax: False             # tie trg embeddings and softmax (for Transformer; can be used together with tied_embeddings), default: False
+    encoder:
+        type: "transformer"
+        num_layers: 4
+        num_heads: 4
+        embeddings:
+            dropout: 0.3
+        multispace_embeddings:
+            src:
+                embedding_dim: 236       # size of embeddings
+                scale: True            # scale the embeddings by sqrt of their size, default: False
+                freeze: False           # if True, embeddings are not updated during training
+            language:
+                embedding_dim: 20
+                scale: True
+                freeze: False
+        hidden_size: 256
+        ff_size: 1024
+        dropout: 0.3                # apply dropout to the inputs to the RNN, default: 0.0
+        freeze: False               # if True, encoder parameters are not updated during training (does not include embedding parameters)
+    decoder:
+        type: "transformer"
+        num_layers: 4
+        num_heads: 4
+        embeddings:
+            dropout: 0.3
+        multispace_embeddings:
+            trg:
+                embedding_dim: 236
+                scale: True
+                freeze: False           # if True, embeddings are not updated during training
+            language:
+                embedding_dim: 20
+                scale: True
+        hidden_size: 256
+        ff_size: 1024
+        dropout: 0.3
+        hidden_dropout: 0.3         # apply dropout to the attention vector, default: 0.0
+
+        freeze: False               # if True, decoder parameters are not updated during training (does not include embedding parameters, but attention)
+        gen_func: entmax15
+        self_attn_func: entmax15
+        src_attn_func: entmax15

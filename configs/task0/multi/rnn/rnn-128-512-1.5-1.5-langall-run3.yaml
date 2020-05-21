@@ -1,0 +1,100 @@
+name: "rnn-128-512-1.5-1.5-langall-run3"
+
+data:
+    format: "sigmorphon"
+    train: "/home/bpop/sigmorphon-2020/task0/all-data/*/*.trn"
+    dev: "/home/bpop/sigmorphon-2020/task0/all-data/*/*.dev"
+    test: "/home/bpop/sigmorphon-2020/task0/all-data/*/*.tst"
+    level: "char"
+    lowercase: False
+    max_sent_length: 50
+    multilingual: True
+
+testing:
+    beam_size: 5
+    alpha: 1.0
+
+training:
+
+    random_seed: 47
+    optimizer: "adam"
+    adam_betas: [0.9, 0.999]
+    learning_rate: 0.001
+    learning_rate_min: 0.000001
+    clip_grad_norm: 1.0
+    weight_decay: 0.
+    batch_size: 128
+    batch_type: "sentence"
+    eval_batch_size: 1024
+    eval_batch_type: "sentence"
+    scheduling: "plateau"
+    patience: 1
+    decrease_factor: 0.5
+    epochs: 100
+    validation_freq: 10000
+    logging_freq: 10
+    eval_metric: ["cer", "sequence_accuracy"]
+    early_stopping_metric: "cer"
+    model_dir: "models/task0/multi/rnn/rnn-128-512-1.5-1.5-langall-run3"
+    overwrite: False
+    shuffle: True
+    use_cuda: True
+    max_output_length: 31
+    print_valid_sents: [0, 1, 2]
+    keep_last_ckpts: 1
+    loss: entmax15
+
+model:
+    tied_embeddings: False
+    tied_softmax: False
+    encoders:
+        src:
+            type: "recurrent"
+            rnn_type: "lstm"
+            embeddings:
+                dropout: 0.0
+            multispace_embeddings:
+                src:
+                    embedding_dim: 108
+                language:
+                    embedding_dim: 20
+            hidden_size: 512
+            bidirectional: True
+            dropout: 0.3
+            num_layers: 2
+            enforce_sorted: False
+        inflection:
+            type: "recurrent"
+            rnn_type: "lstm"
+            embeddings:
+                dropout: 0.0
+            multispace_embeddings:
+                inflection:
+                    embedding_dim: 108
+                language:
+                    embedding_dim: 20
+            hidden_size: 512
+            bidirectional: True
+            dropout: 0.3
+            num_layers: 2
+            freeze: False
+            enforce_sorted: False
+    decoder:
+        type: "recurrent"
+        rnn_type: "lstm"
+        multispace_embeddings:
+            trg:
+                embedding_dim: 108
+            language:
+                embedding_dim: 20
+        hidden_size: 512
+        dropout: 0.3
+        hidden_dropout: 0.3
+        num_layers: 2
+        input_feeding: True
+        init_hidden: "bridge"
+        attention: "luong"
+        gen_func: entmax15
+        attn_func: entmax15
+        attn_merge: gate
+        gate_func: entmax15

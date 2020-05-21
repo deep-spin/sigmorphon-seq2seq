@@ -1,0 +1,82 @@
+name: "multi-128-512-1.5-1.5-langall-run2"
+
+data:
+    format: "sigmorphon-g2p"
+    train: "/home/bpop/sigmorphon-2020/2020/task1/data/train/*_train.tsv"
+    dev: "/home/bpop/sigmorphon-2020/2020/task1/data/dev/*_dev.tsv"
+    test: "/home/bpop/sigmorphon-2020/2020/task1/data/test/*_test.tsv"
+    src_level: "char"
+    trg_level: "word"
+    lowercase: False
+    max_sent_length: 50
+    src_voc_min_freq: 1
+    trg_voc_min_freq: 1
+    multilingual: True
+
+testing:
+    beam_size: 5
+    alpha: 1.0
+
+training:
+    random_seed: 1313
+    optimizer: "adam"
+    adam_betas: [0.9, 0.999]
+    learning_rate: 0.001
+    learning_rate_min: 0.00001
+    clip_grad_val: 1.0
+    weight_decay: 0.
+    batch_size: 128
+    batch_type: "sentence"
+    eval_batch_size: 1024
+    eval_batch_type: "sentence"
+    batch_multiplier: 1
+    scheduling: "plateau"
+    patience: 1
+    decrease_factor: 0.5
+    epochs: 100
+    validation_freq: 500
+    logging_freq: 10
+    eval_metric: ["cer", "wer"]
+    early_stopping_metric: "cer"
+    model_dir: "models/task1/multi/rnn/multi-128-512-1.5-1.5-langall-run2"
+    overwrite: False
+    shuffle: True
+    use_cuda: True
+    max_output_length: 31
+    print_valid_sents: [0, 1, 2]
+    keep_last_ckpts: 1
+    loss: entmax15
+
+model:
+    encoder:
+        type: "recurrent"
+        rnn_type: "lstm"
+        embeddings:
+            dropout: 0.0
+        multispace_embeddings:
+            src:
+                embedding_dim: 108
+            language:
+                embedding_dim: 20
+        hidden_size: 512
+        bidirectional: True
+        dropout: 0.3
+        num_layers: 2
+    decoder:
+        type: "recurrent"
+        rnn_type: "lstm"
+        multispace_embeddings:
+            trg:
+                embedding_dim: 108
+            language:
+                embedding_dim: 20
+        hidden_size: 512
+        dropout: 0.3
+        hidden_dropout: 0.3
+        num_layers: 2
+        input_feeding: True
+        init_hidden: "bridge"
+        attention: "luong"
+        gen_func: entmax15
+        attn_func: entmax15
+        output_bias: True
