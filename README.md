@@ -21,7 +21,7 @@ However, Joey NMT re-implements baselines from major publications.
 Check out the detailed [documentation](https://joeynmt.readthedocs.io) and our [paper](https://arxiv.org/abs/1907.12484).
 
 ## Contributors
-Joey NMT is developed by [Joost Bastings](https://bastings.github.io) (University of Amsterdam) and [Julia Kreutzer](http://www.cl.uni-heidelberg.de/~kreutzer/) (Heidelberg University).
+Joey NMT is developed by [Jasmijn Bastings](https://bastings.github.io) (University of Amsterdam) and [Julia Kreutzer](http://www.cl.uni-heidelberg.de/~kreutzer/) (Heidelberg University).
 
 ## Features
 Joey NMT implements the following features (aka the minimalist toolkit of NMT):
@@ -187,7 +187,7 @@ If you use Joey NMT in a publication or thesis, please cite the following [paper
 
 ```
 @ARTICLE{JoeyNMT,
-author = {{Kreutzer}, Julia and {Bastings}, Joost and {Riezler}, Stefan},
+author = {{Kreutzer}, Julia and {Bastings}, Jasmijn and {Riezler}, Stefan},
 title = {Joey {NMT}: A Minimalist {NMT} Toolkit for Novices},
 journal = {To Appear in EMNLP-IJCNLP 2019: System Demonstrations},
 year = {2019},
